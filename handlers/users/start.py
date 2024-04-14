@@ -3,7 +3,8 @@ from aiogram import types
 from aiogram.dispatcher.filters.builtin import CommandStart
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from loader import dp
-CHANNEL_ID = '@nimadir_uchun'
+from .database import create_user
+CHANNEL_IDS = ['@nimadir_uchun']
 
 from .database import get_url_by_id
 
@@ -24,12 +25,29 @@ link_menu = InlineKeyboardMarkup(row_width=2, inline_keyboard=[
 ])
 
 
-def check_user(chat_member):
-    if chat_member['status'] != 'left':
-        # await message.answer(f"Quyidagi kanallarimizga obuna boʻling. Botni keyin toʻliq ishlatishingiz mumkin!  {message.from_user.full_name}!", reply_markup=ink_menu)
-        return True
-    else:
-        return False
+async def check_user(message, user_id=None):
+    if not user_id:
+        user_id = message.from_user.id
+    for CHANNEL_ID in CHANNEL_IDS:
+        chat_member = await dp.bot.get_chat_member(chat_id=CHANNEL_ID, user_id=user_id)
+        if chat_member['status'] not in ["left","kicked"]:
+            pass
+        else:
+            await message.answer(f"Quyidagi kanallarimizga obuna boʻling. Botni keyin toʻliq ishlatishingiz mumkin!  {message.from_user.full_name}!", reply_markup=link_menu)
+            return False
+    return True
+
+    # if message.chat.type == 'private':
+    #     if check_user(await dp.bot.get_chat_member(chat_id=CHANNEL_ID, user_id=message.from_user.id)):
+    #         await dp.bot.send_message(message.from_user.id, text="Video kochirish uchun link yuborishingiz mumkin")
+    #     else:
+    #         await message.answer(f"Quyidagi kanallarimizga obuna boʻling. Botni keyin toʻliq ishlatishingiz mumkin!  {message.from_user.full_name}!", reply_markup=link_menu)
+            
+    # if chat_member['status'] != 'left':
+    #     # await message.answer(f"Quyidagi kanallarimizga obuna boʻling. Botni keyin toʻliq ishlatishingiz mumkin!  {message.from_user.full_name}!", reply_markup=ink_menu)
+    #     return True
+    # else:
+    #     return False
 
 
 # @check_user
@@ -37,37 +55,57 @@ def check_user(chat_member):
 # @dp.message_handler(commands=['start'])
 async def bot_start(message: types.Message):
     msg = await message.reply("Salom 😊, bu bot orqali Youtube, Instagram va Tiktok videolarini yuklab olishingiz mumkin!")
-    if message.chat.type == 'private':
-        if check_user(await dp.bot.get_chat_member(chat_id=CHANNEL_ID, user_id=message.from_user.id)):
-            await dp.bot.send_message(message.from_user.id, text="Video kochirish uchun link yuborishingiz mumkin")
+    res = await check_user(message)
+    try:
+        create_user(message.from_user.id)
+    except Exception as e:
+        print(e)
+    if res:
+        await dp.bot.send_message(message.from_user.id, text="Video kochirish uchun link yuborishingiz mumkin")
+    # if message.chat.type == 'private':
+    #     if check_user(await dp.bot.get_chat_member(chat_id=CHANNEL_ID, user_id=message.from_user.id)):
+    #     else:
+    #         await message.answer(f"Quyidagi kanallarimizga obuna boʻling. Botni keyin toʻliq ishlatishingiz mumkin!  {message.from_user.full_name}!", reply_markup=link_menu)
+
+
+@dp.callback_query_handler(lambda c: c.data == 'check_user')
+async def start_button(call:types.CallbackQuery):
+    query = call.data
+    chat_id = call.message.chat.id
+    if query == "check_user":
+        # data = await dp.bot.get_chat_member(chat_id=CHANNEL_ID,user_id=chat_id)
+        # if data.status in ["left","kicked"]:
+        res = await check_user(call.message, user_id=call.from_user.id)
+        if res == False:
+            await dp.bot.delete_message(call.from_user.id, call.message.message_id)
+            await call.answer("Kechirasiz siz kanalga a'zo bo'lmadingiz",show_alert=True)
         else:
-            await message.answer(f"Quyidagi kanallarimizga obuna boʻling. Botni keyin toʻliq ishlatishingiz mumkin!  {message.from_user.full_name}!", reply_markup=link_menu)
-
-
-
-
+            await call.message.delete()
+            await dp.bot.send_message(chat_id=chat_id,text="Video kochirish uchun link yuborishingiz mumkin")
 
 @dp.callback_query_handler(lambda c: c.data.startswith("send_"))
-async def start_button(call:types.CallbackQuery):
+async def send_datas(call:types.CallbackQuery):
     await dp.bot.delete_message(call.from_user.id, call.message.message_id)
-    if check_user(await dp.bot.get_chat_member(chat_id=CHANNEL_ID, user_id=call.from_user.id)):
-        pass
-        # await dp.bot.send_message(call.from_user.id, text="Video kochirish uchun link yuborishingiz mumkin")
-    else:
-        await dp.bot.send_message(call.from_user.id, f"Quyidagi kanallarimizga obuna boʻling. Botni keyin toʻliq ishlatishingiz mumkin!  {call.from_user.full_name}!", reply_markup=link_menu)
+    # if check_user(await dp.bot.get_chat_member(chat_id=CHANNEL_ID, user_id=call.from_user.id)):
+    #     pass
+    #     # await dp.bot.send_message(call.from_user.id, text="Video kochirish uchun link yuborishingiz mumkin")
+    # else:
+    #     await dp.bot.send_message(call.from_user.id, f"Quyidagi kanallarimizga obuna boʻling. Botni keyin toʻliq ishlatishingiz mumkin!  {call.from_user.full_name}!", reply_markup=link_menu)
 
-    chat_id = call.message.chat.id
-    type, url_id = call.data.replace('send_', '').split('_')
+    res = await check_user(message)
+    if res:
+        chat_id = call.message.chat.id
+        type, url_id = call.data.replace('send_', '').split('_')
 
-    url = get_url_by_id(url_id)
+        url = get_url_by_id(url_id)
 
-    call.answer('')
-    if type == 'video':
-        await dp.bot.send_video(chat_id, url)
-    elif type == 'audio':
-        await dp.bot.send_audio(chat_id, url)
-    else:
-        await dp.bot.send_message(chat_id=chat_id,text="Hatolik!")
+        await call.answer('')
+        if type == 'video':
+            await dp.bot.send_video(chat_id, url)
+        elif type == 'audio':
+            await dp.bot.send_audio(chat_id, url)
+        else:
+            await dp.bot.send_message(chat_id=chat_id,text="Hatolik!")
     
     # query = call.data
     # if query == "check_user":

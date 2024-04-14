@@ -9,7 +9,7 @@ from tiktok import tk
 from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher.filters.builtin import CallbackQuery
 # from pytube import YouTube
-from .start import check_user, CHANNEL_ID, link_menu
+from .start import check_user, link_menu
 from instagram import instadownloader
 from pytube import YouTube
 from tiktok_instagram_youtube import yt, tk_ins
@@ -133,9 +133,11 @@ async def download_youtube_video(url, message, bot):
 @dp.message_handler()
 # @check_user
 async def answer_message(message:types.Message):
-    if not check_user(await dp.bot.get_chat_member(chat_id=CHANNEL_ID, user_id=message.from_user.id)):
-        await message.answer(f"Quyidagi kanallarimizga obuna boʻling. Botni keyin toʻliq ishlatishingiz mumkin!  {message.from_user.full_name}!", reply_markup=link_menu)
-    else:
+    # if not check_user(await dp.bot.get_chat_member(chat_id=CHANNEL_ID, user_id=message.from_user.id)):
+    #     await message.answer(f"Quyidagi kanallarimizga obuna boʻling. Botni keyin toʻliq ishlatishingiz mumkin!  {message.from_user.full_name}!", reply_markup=link_menu)
+    # else:
+    res = await check_user(message)
+    if res:
         chat_id = message.chat.id
         url = message.text
         # yt = YouTube(url)
