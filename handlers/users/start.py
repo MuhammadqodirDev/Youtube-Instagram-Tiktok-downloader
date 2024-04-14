@@ -92,20 +92,23 @@ async def send_datas(call:types.CallbackQuery):
     # else:
     #     await dp.bot.send_message(call.from_user.id, f"Quyidagi kanallarimizga obuna boʻling. Botni keyin toʻliq ishlatishingiz mumkin!  {call.from_user.full_name}!", reply_markup=link_menu)
 
-    res = await check_user(message)
-    if res:
-        chat_id = call.message.chat.id
-        type, url_id = call.data.replace('send_', '').split('_')
+    chat_id = call.message.chat.id
+    type, url_id = call.data.replace('send_', '').split('_')
 
-        url = get_url_by_id(url_id)
+    url = get_url_by_id(url_id)
 
-        await call.answer('')
+    await call.answer('')
+    try:
         if type == 'video':
+            print(url)
             await dp.bot.send_video(chat_id, url)
         elif type == 'audio':
             await dp.bot.send_audio(chat_id, url)
         else:
-            await dp.bot.send_message(chat_id=chat_id,text="Hatolik!")
+            raise Exception('xatolik')
+    except Exception as e:
+        print(e)
+        await dp.bot.send_message(chat_id=chat_id,text='❌')
     
     # query = call.data
     # if query == "check_user":

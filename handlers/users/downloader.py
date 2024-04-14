@@ -42,7 +42,7 @@ async def return_buttons(link, message, bot, msg):
             action = f"send_audio_{url}" if i['extension'] == 'mp3' else f"send_video_{id}"
             markup.add(InlineKeyboardButton(f"{display}", callback_data=action))
         
-        await bot.send_message(message.chat.id, 'Video sifatini tanlang', reply_markup=markup)
+        await bot.send_message(message.chat.id, 'Video sifatini tanlang ⬇️', reply_markup=markup)
         # return markup
 
     except Exception as e:

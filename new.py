@@ -148,3 +148,21 @@
 
 # for stream in yt1.streams:
 #     print(stream)
+
+
+
+
+import requests
+
+url = "https://youtube-media-downloader.p.rapidapi.com/v2/video/details"
+
+querystring = {"videoId":"WNCl-69POro"}
+
+headers = {
+	"X-RapidAPI-Key": "e81ff79744msh6d13aeb911b1de6p10294cjsn2a265eac617e",
+	"X-RapidAPI-Host": "youtube-media-downloader.p.rapidapi.com"
+}
+
+response = requests.get(url, headers=headers, params=querystring)
+
+print(response.json())

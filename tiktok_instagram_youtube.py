@@ -90,9 +90,10 @@ def yt(link):
     querystring = {"videoId": id}
 
     headers = {
-        "X-RapidAPI-Key": "f37f5d5d32msha77067df491efdbp1252a1jsn1c1999033af8",
+        "X-RapidAPI-Key": "e81ff79744msh6d13aeb911b1de6p10294cjsn2a265eac617e",
         "X-RapidAPI-Host": "youtube-media-downloader.p.rapidapi.com"
     }
+
 
     response = requests.get(url, headers=headers, params=querystring)
 
